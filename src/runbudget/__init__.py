@@ -4,12 +4,14 @@ Summarization bounds how long the *context* may get. It says nothing about what 
 *costs*: forty model calls with a 30k-token prompt and a 2k-token answer is a real number,
 and nobody checks it until the invoice arrives.
 
-    >>> from runbudget import RunBudget
-    >>> budget = RunBudget(max_cost=0.05)
+    >>> from runbudget import Budget, RunBudget
+    >>> budget = RunBudget(budget=Budget(max_cost=0.05))
     >>> budget.add("gpt-4o-mini", input_tokens=10_000, output_tokens=1_000).action
     'ok'
     >>> budget.spent
     0.0021
+    >>> budget.add("gpt-4o", input_tokens=10_000, output_tokens=1_000).action
+    'ok'
     >>> budget.add("gpt-4o", input_tokens=10_000, output_tokens=1_000).action
     'stop'
 
