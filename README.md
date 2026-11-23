@@ -1,25 +1,23 @@
-# runbudget
+<p align="center">
+  <img src="https://raw.githubusercontent.com/sandeshbagmare/runbudget/main/assets/banner.svg" width="100%" alt="runbudget: a per-run cost cap that warns before it stops">
+</p>
 
-A per-run token and cost budget for an agent, with a warning before the limit and a clean
-stop at it.
+<p align="center">
+  <a href="https://pypi.org/project/runbudget/"><img alt="PyPI version" src="https://img.shields.io/pypi/v/runbudget.svg"></a>
+  <a href="https://pypi.org/project/runbudget/"><img alt="Python versions" src="https://img.shields.io/pypi/pyversions/runbudget.svg"></a>
+  <a href="https://pypi.org/project/runbudget/"><img alt="Downloads" src="https://img.shields.io/pypi/dm/runbudget.svg"></a>
+  <a href="https://github.com/sandeshbagmare/runbudget/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/sandeshbagmare/runbudget/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://github.com/sandeshbagmare/runbudget/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/pypi/l/runbudget.svg"></a>
+  <a href="https://sandeshbagmare.github.io/runbudget/"><img alt="docs" src="https://img.shields.io/badge/docs-online-2ea44f.svg"></a>
+  <a href="https://pypi.org/project/runbudget/"><img alt="zero dependencies" src="https://img.shields.io/badge/dependencies-0-2ea44f.svg"></a>
+</p>
 
-[![PyPI](https://img.shields.io/pypi/v/runbudget.svg)](https://pypi.org/project/runbudget/)
-[![Python](https://img.shields.io/pypi/pyversions/runbudget.svg)](https://pypi.org/project/runbudget/)
-[![tests](https://github.com/sandeshbagmare/runbudget/actions/workflows/ci.yml/badge.svg)](https://github.com/sandeshbagmare/runbudget/actions/workflows/ci.yml)
-[![license](https://img.shields.io/pypi/l/runbudget.svg)](https://github.com/sandeshbagmare/runbudget/blob/main/LICENSE)
+<h3 align="center">a per-run cost cap that warns before it stops</h3>
+<p align="center"><em>Standard library only. No runtime dependencies. Python 3.9+.</em></p>
 
-```python
->>> from runbudget import Budget, RunBudget
->>> budget = RunBudget(budget=Budget(max_cost=0.05, max_steps=20))
->>> budget.add("gpt-4o-mini", input_tokens=10_000, output_tokens=1_000).action
-'ok'
->>> budget.add("gpt-4o", input_tokens=10_000, output_tokens=1_000).action
-'stop'
-```
-
-Context limits and cost limits fail differently. Summarization keeps the window small; it
-does not stop a run from making forty calls. `runbudget` records each call, prices it,
-and answers the only question a loop needs to ask: **may I make another call?**
+<p align="center">
+  <img src="https://raw.githubusercontent.com/sandeshbagmare/runbudget/main/assets/how.svg" width="720" alt="how runbudget fits in">
+</p>
 
 ## Install
 

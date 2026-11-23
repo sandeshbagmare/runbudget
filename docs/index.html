@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>runbudget — a per-run cost cap that warns before it stops</title>
+<meta name="description" content="A per-run cost cap that warns before it stops. Standard library only, Python 3.9+.">
+<meta property="og:title" content="runbudget — a per-run cost cap that warns before it stops">
+<meta property="og:description" content="A per-run cost cap that warns before it stops. Standard library only, Python 3.9+.">
+<meta property="og:image" content="https://raw.githubusercontent.com/sandeshbagmare/runbudget/main/assets/banner.svg">
+<meta property="og:type" content="website">
+<link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
+<style>
+  :root {
+    --bg: hsl(140 45% 8%);
+    --ink: #e6edf6;
+    --muted: #9fb0c6;
+    --line: hsl(140 35% 26%);
+    --accent: hsl(176 88% 66%);
+    --soft: hsl(176 92% 80%);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.65 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  a { color: var(--soft); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  header {
+    position: sticky; top: 0; z-index: 9; display: flex; gap: 18px; align-items: center;
+    padding: 14px 24px; background: rgba(8, 12, 20, 0.86); backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+  header .mark { width: 26px; height: 26px; }
+  header strong { font-family: ui-monospace, monospace; letter-spacing: 0.02em; }
+  header nav { margin-left: auto; display: flex; gap: 16px; font-size: 14px; }
+  .hero { max-width: 1180px; margin: 0 auto; padding: 18px 20px 0; }
+  .hero img { width: 100%; border-radius: 14px; box-shadow: 0 18px 50px rgba(0,0,0,0.45); }
+  main { max-width: 900px; margin: 0 auto; padding: 28px 20px 80px; }
+  h1, h2, h3, h4 { line-height: 1.25; }
+  h2 { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--line); }
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.92em;
+    background: rgba(148, 163, 184, 0.15); padding: 1px 5px; border-radius: 5px;
+  }
+  pre.code {
+    position: relative; background: #070b12; border: 1px solid var(--line);
+    border-radius: 12px; padding: 16px; overflow-x: auto;
+  }
+  pre.code code { background: none; padding: 0; font-size: 14px; }
+  pre .lang {
+    position: absolute; top: 8px; right: 12px; font-size: 11px; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  table { width: 100%; border-collapse: collapse; margin: 18px 0; font-size: 15px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 600; }
+  img { max-width: 100%; }
+  blockquote {
+    margin: 18px 0; padding: 4px 16px; border-left: 3px solid var(--accent);
+    color: var(--muted);
+  }
+  footer {
+    border-top: 1px solid var(--line); padding: 26px 20px; color: var(--muted);
+    font-size: 14px; text-align: center;
+  }
+</style>
+</head>
+<body>
+<header>
+  <img class="mark" src="../assets/logo.svg" alt="">
+  <strong>runbudget</strong>
+  <nav>
+    <a href="https://pypi.org/project/runbudget/">PyPI</a>
+    <a href="https://github.com/sandeshbagmare/runbudget">GitHub</a>
+    <a href="https://github.com/sandeshbagmare/runbudget/issues">Issues</a>
+    <a href="https://github.com/sandeshbagmare/runbudget/blob/main/CHANGELOG.md">Changelog</a>
+  </nav>
+</header>
+<div class="hero"><img src="../assets/banner.svg" alt="runbudget"></div>
+<main>
+<p align="center">
+  <img src="../assets/how.svg" width="720" alt="how runbudget fits in">
+</p>
+<h2>Install</h2>
+<pre class="code"><span class="lang">console</span><code>pip install runbudget</code></pre>
+<h2>Use</h2>
+<pre class="code"><span class="lang">python</span><code>from runbudget import Budget, BudgetExceeded, RunBudget
+
+budget = RunBudget(
+    budget=Budget(max_cost=2.00, max_tokens=500_000, max_steps=40),
+    prices={&quot;my-model&quot;: (0.50, 1.50)},   # dollars per million tokens
+    warn_at=0.8,
+)
+
+while True:
+    status = budget.status()
+    if status.stopped:
+        report_to_user(status.reason)     # &quot;cost budget reached: $2.0000 of $2.0000&quot;
+        break
+    if status.action == &quot;warn&quot;:
+        log(status.reason)                # &quot;cost budget at 84%: $1.6900 of $2.0000&quot;
+    response = model(...)
+    budget.add(&quot;my-model&quot;, response.input_tokens, response.output_tokens)</code></pre>
+<p>Or raise instead of returning a status:</p>
+<pre class="code"><span class="lang">python</span><code>try:
+    budget.check()        # also spelled budget.enforce()
+except BudgetExceeded as error:
+    error.reason          # &quot;steps budget reached: 40 of 40&quot;</code></pre>
+<p>At the end of a run:</p>
+<pre class="code"><span class="lang">python</span><code>budget.spent, budget.tokens, budget.steps
+budget.remaining          # Budget(max_cost=…, max_tokens=…, max_steps=…)
+budget.breakdown()        # {&quot;gpt-4o&quot;: {&quot;steps&quot;: 3, &quot;input_tokens&quot;: …, &quot;cost&quot;: …}}</code></pre>
+<h2>Prices</h2>
+<p><code>DEFAULT_PRICES</code> holds a small table (per million tokens, in dollars) so a first run works without configuration: <code>gpt-4o</code>, <code>gpt-4o-mini</code>, <code>gpt-4.1</code>, <code>gpt-4.1-mini</code>, <code>claude-opus</code>, <code>claude-sonnet</code>, <code>claude-haiku</code>, <code>gemini-2.5-pro</code>, <code>gemini-2.5-flash</code>, <code>llama</code> (free).</p>
+<ul>
+<li>override any entry with <code>prices={"gpt-4o": (2.00, 8.00)}</code></li>
+<li>a model name is matched exactly first, then by prefix, longest first, so</li>
+</ul>
+<p>  <code>gpt-4o-2026-01-01</code> uses the <code>gpt-4o</code> price</p>
+<ul>
+<li>an unknown model raises <code>KeyError</code> instead of quietly costing zero — the failure mode</li>
+</ul>
+<p>  that makes a budget report say "you spent nothing"</p>
+<p>Charges that are not model calls (a paid search API, a sandbox minute) go in with <code>budget.add_cost(0.02, model="web_search")</code>.</p>
+<h2>Rules</h2>
+<ul>
+<li>All three limits are optional; <code>None</code> means unlimited.</li>
+<li><code>warn_at</code> is a fraction of any limit; the status becomes <code>warn</code> at that point.</li>
+<li>The status is <code>ok</code> → <code>warn</code> → <code>stop</code>, and a <code>Status</code> is truthy until it is <code>stop</code>.</li>
+<li>Token counts are what the provider reported. Estimating input tokens before the call is</li>
+</ul>
+<p>  a different problem; this library settles up after each response.</p>
+<ul>
+<li>Money is rounded to six decimals at each step, so cent-level totals stay readable.</li>
+</ul>
+<h2>Limits</h2>
+<ul>
+<li>The price table is a convenience, not a source of truth. Check it against your</li>
+</ul>
+<p>  provider's page before trusting a monthly number.</p>
+<ul>
+<li>One currency (US dollars), one price per model — no caching discounts, no batch rates.</li>
+<li>It tracks a single run; for a daily or per-tenant cap, keep a long-lived object and</li>
+</ul>
+<p>  call <code>reset()</code> when a run ends.</p>
+<h2>Development</h2>
+<pre class="code"><span class="lang">console</span><code>python -m venv .venv
+.venv/bin/pip install -e &quot;.[test]&quot;
+.venv/bin/pytest</code></pre>
+<h2>License</h2>
+<p>MIT.</p>
+</main>
+<footer>
+  runbudget · MIT · standard library only ·
+  <a href="https://github.com/sandeshbagmare/runbudget">source</a> ·
+  <a href="https://pypi.org/project/runbudget/">pip install runbudget</a>
+</footer>
+</body>
+</html>
